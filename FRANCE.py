@@ -5,19 +5,29 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import requests
 
+import time
+import urllib
+# from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
+
+import cairosvg
 
 chrome_options = webdriver.ChromeOptions()
 chrome_options.binary_location = os.environ.get("GOOGLE_CHROME_BIN")
-chrome_options.add_argument("--headless")
+# chrome_options.add_argument("--headless")
 chrome_options.add_argument("--disable-dev-shm-usage")
 chrome_options.add_argument("--no-sandbox")
 
-count = 1
+count = 0
+error = 0
+
 
 def send_to_telegram(message):  # Telegram bot
 
-    apiToken = '5704612050:AAEIS4ZcP19CDgZ5-g3uNFxw64Dvsmn0HRA'
-    chatID = '-819110848'
+    apiToken = '6194281790:AAFyDI-ggKlaNSFbASmNbHG6TmjJ7lkmW_8'
+    chatID = '-1001756342015'
+
     apiURL = f'https://api.telegram.org/bot{apiToken}/sendMessage'
 
     try:
@@ -25,11 +35,15 @@ def send_to_telegram(message):  # Telegram bot
         print(response.text)
     except Exception as e:
         print(e)
+
+    print(message)
+
 
 def send_to_telegram_log(message):  # Telegram bot
 
-    apiToken = '5704612050:AAEIS4ZcP19CDgZ5-g3uNFxw64Dvsmn0HRA'
-    chatID = '-860708556'
+    apiToken = '6194281790:AAFyDI-ggKlaNSFbASmNbHG6TmjJ7lkmW_8'
+    chatID = '-1001756342015'
+
     apiURL = f'https://api.telegram.org/bot{apiToken}/sendMessage'
 
     try:
@@ -39,74 +53,130 @@ def send_to_telegram_log(message):  # Telegram bot
         print(e)
 
 
-def image():
+def saveImage(name, path):
     directory = os.getcwd()
-    files = {'photo': open(f'{directory}\WARNING!!!!!1.png', 'rb')}
-    requests.post('https://api.telegram.org/bot5704612050:AAEIS4ZcP19CDgZ5-g3uNFxw64Dvsmn0HRA/'
-                  'sendPhoto?chat_id=-819110848', files=files)
+    file_path = directory + name + '.jpg'
+    urllib.request.urlretrieve(path, file_path)
+    # files = {'photo': open(f'{directory}\WARNING!!!!!1.png', 'rb')}
+    # requests.post('https://api.telegram.org/bot5704612050:AAEIS4ZcP19CDgZ5-g3uNFxw64Dvsmn0HRA/'
+    #               'sendPhoto?chat_id=-819110848', files=files)
+
+    # try:
+    #     WebDriverWait(driver, 5).until(
+    #         EC.presence_of_element_located((By.XPATH, '//p[@class="lead fr-text mt-4 mb-3 text-center"]')))
+    #     send_to_telegram_log(count)
+    #     # count = count + 1
+    #     send_to_telegram(
+    #         "French Visa Available! https://consulat.gouv.fr/en/ambassade-de-france-en-irlande/appointment?name=Visas"
+    #         )
+    #     # driver.save_screenshot(f'WARNING!!!!!1.png')
+    #     # image()
+    # except:
+    #     # send_to_telegram(
+    #     #     "French Visa! https://consulat.gouv.fr/en/ambassade-de-france-en-irlande/appointment?name=Visas"
+    #     #     )
+    #     print("no visa")
+    #     # driver.save_screenshot(f'WARNING!!!!!1.png')
+    #     # image()
+
+    # driver.quit()
+
+
+def clickWithName(s):
+    try:
+        xpath = "//button[contains(text(),'" + s + "')]"
+        driver.implicitly_wait(5)
+        driver.find_element(By.XPATH, xpath).click()
+    except:
+        print(s + " is not found!")
+        error = 1
+        return
+
+
+def S1AccessToService():
+    clickWithName("Access to services")
+
+
+def S2SkipTest():
+    clickWithName("Yes")
+
+
+def S2ToConfirm():
+    clickWithName("To confirm")
+
+
+def S3BookAppointment():
+    try:
+        driver.implicitly_wait(5)
+        checkbox = driver.find_element(By.XPATH, "//input[@id='readInformations']")
+        driver.implicitly_wait(5)
+        driver.execute_script("arguments[0].click();", checkbox)
+        driver.implicitly_wait(5)
+        is_selected = checkbox.is_selected()
+        driver.implicitly_wait(5)
+        while not is_selected:
+            driver.execute_script("arguments[0].click();", checkbox)
+            is_selected = checkbox.is_selected()
+        driver.implicitly_wait(5)
+        is_present3 = driver.find_element(By.CSS_SELECTOR,
+                                          "button[class='fr-btn fr-btn--primary fr-icon-check-line fr-btn--icon-left "
+                                          "accept']")
+    except:
+        print("check box error")
+
+    clickWithName("Book an appointment")
+
+
+def S4SearchSlot():
+    try:
+        xpath = "//button[contains(text(),'" + s + "')]"
+        driver.implicitly_wait(5)
+        driver.find_element(By.XPATH, xpath)
+        send_to_telegram(
+            "French Visa! https://consulat.gouv.fr/en/ambassade-de-france-en-irlande/appointment?name=Visas")
+    except:
+        if error == 0:
+            print("no slot")
+        return
+
+
+def loadDriver():
+    # driver = webdriver.Edge(executable_path="/Users/qiong/Downloads/edgedriver_mac64_m1/msedgedriver")
+    global driver
+    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
+    # driver = webdriver.Safari();
+    # driver = webdriver.Edge()
+    driver.get("https://consulat.gouv.fr/en/ambassade-de-france-en-irlande/appointment?name=Visas")
+    # driver.implicitly_wait(100)
+
 
 def checker():
-    driver = webdriver.Chrome(executable_path=os.environ.get("CHROMEDRIVER_PATH"), options=chrome_options)
-    # driver = webdriver.Chrome(executable_path="C:\PYTHON\chromedriver.exe", options=options)
+    S1AccessToService()
     global count
-    driver.get("https://consulat.gouv.fr/ambassade-de-france-a-minsk/rendez-vous?name=R%C3%A9ception%20des%20demandes"
-               "%20de%20visa")
-
-    driver.implicitly_wait(20)
-    is_present1 = driver.find_elements(By.XPATH, "//button[normalize-space()='Accéder aux services']")
-    if len(is_present1) != 0:
-        driver.implicitly_wait(5)
-        driver.find_element(By.CSS_SELECTOR, "button[class='fr-btn fr-btn--primary fr-icon-check-line fr-btn--icon-left ']").click()
+    if count == 0:
+        S2ToConfirm()
+        count = 1
     else:
-        #driver.implicitly_wait(5)
-        #driver.find_element(By.XPATH, "//button[normalize-space()='Accéder aux services']").click()
-        return False
-
-    is_present2 = driver.find_elements(By.XPATH, "//button[normalize-space()='Confirmer']")
-    if len(is_present2) != 0:
-        driver.implicitly_wait(5)
-        driver.find_element(By.XPATH, "//button[normalize-space()='Confirmer']").click()
-    else:
-        # driver.implicitly_wait(5)
-        # driver.find_element(By.XPATH, "//button[normalize-space()='Accéder aux services']").click()
-        return False
+        time.sleep(1)
+        S2SkipTest()
+        time.sleep(1)
+    global error
+    S3BookAppointment()
+    S4SearchSlot()
+    driver.refresh()
+    error = 0
 
 
-
-    driver.implicitly_wait(5)
-    checkbox = driver.find_element(By.XPATH, "//input[@id='readInformations']")
-    driver.implicitly_wait(5)
-    driver.execute_script("arguments[0].click();", checkbox)
-    driver.implicitly_wait(5)
-    is_selected = checkbox.is_selected()
-    driver.implicitly_wait(5)
-    while not is_selected:
-        driver.execute_script("arguments[0].click();", checkbox)
-        is_selected = checkbox.is_selected()
-
-    driver.implicitly_wait(5)
-    driver.find_element(By.XPATH, "//button[normalize-space()='Prendre rendez-vous']").click()
-    driver.implicitly_wait(5)
-
-    try:
-        WebDriverWait(driver, 5).until(
-            EC.presence_of_element_located((By.XPATH, '//p[@class="lead fr-text mt-4 mb-3 text-center"]')))
-        send_to_telegram_log(count)
-        count = count + 1
-        driver.save_screenshot(f'WARNING!!!!!1.png')
-        # image()
+if __name__ == __name__:
+    #Main action starts here:
+    # loadDriver()
+    # fill in code
+    # inp = input('STATEMENT:')
+    # driver.find_element(By.XPATH, "//*[@id='is-human']/div/div[2]/input").send_keys(inp)
+    src = "b'<svg xmlns="http://www.w3.org/2000/svg" width="150" height="50" viewBox="0,0,150,50"><rect width="100%" height="100%" fill="#FFFFFF"/><path fill="#dc609e" d="M23.35 40.30L23.41 40.36L23.49 40.44L20.34 39.91L20.26 39.84L20.38 39.96L19.07 37.46L19.14 37.53L19.12 34.55L19.17 34.59L19.26 34.69Q19.84 34.61 20.70 34.46L20.70 34.46Q21.43 34.33 22.35 34.16L22.35 34.16L22.19 34.00L22.10 34.39L22.04 34.80L22.00 34.76Q21.93 35.60 22.18 36.17L22.18 36.17Q22.49 36.89 23.26 37.20L23.26 37.20L23.26 37.20L23.16 37.10L26.09 37.48L26.12 37.51Q26.96 37.45 27.42 37.41L27.42 37.41Q27.86 37.36 27.95 37.32L27.95 37.32L27.89 37.27L27.81 37.18Q28.30 37.13 28.72 36.98L28.72 36.98Q29.14 36.83 29.49 36.58L29.49 36.58L29.62 36.71L29.62 36.71Q30.19 36.29 30.49 35.68L30.49 35.68Q30.91 34.84 30.80 33.62L30.80 33.62L30.69 33.51L30.72 33.54L30.82 33.65L28.80 29.55L28.90 29.65L24.71 28.10L24.70 27.98L24.64 27.81L24.70 27.86Q24.90 27.83 25.28 27.79L25.28 27.79Q25.56 27.76 25.93 27.72L25.93 27.72L25.91 27.71L25.86 27.66L25.79 27.58L29.22 26.39L29.15 26.32L30.72 23.27L30.58 23.13Q30.65 22.97 30.68 22.79L30.68 22.79Q30.71 22.65 30.71 22.49L30.71 22.49L30.65 22.43L30.69 22.47Q30.73 21.71 30.37 21.09L30.37 21.09Q30.04 20.55 29.40 20.12L29.40 20.12L29.36 20.08L29.31 20.03L29.34 20.05L26.50 19.35L26.65 19.50Q25.86 19.29 25.16 19.30L25.16 19.30Q24.48 19.31 23.89 19.51L23.89 19.51L24.11 19.74L24.15 19.78L24.05 19.67L22.34 21.39L22.26 21.31L22.34 21.39Q22.18 21.70 22.12 22.04L22.12 22.04Q22.05 22.39 22.09 22.78L22.09 22.78L22.16 22.86L22.10 22.79L22.09 22.79Q21.68 22.77 20.97 22.58L20.97 22.58Q20.24 22.39 19.20 22.02L19.20 22.02L19.11 21.93L18.97 21.79L19.00 21.83Q18.87 20.97 18.81 20.32L18.81 20.32Q18.75 19.69 18.77 19.27L18.77 19.27L18.83 19.33L18.94 19.44L18.90 19.40L20.01 17.12L20.06 17.17Q20.94 16.90 21.84 16.78L21.84 16.78Q22.51 16.69 23.20 16.69L23.20 16.69L23.01 16.51L23.16 16.66L29.33 16.73L29.34 16.74Q32.09 17.01 33.28 18.21L33.28 18.21Q34.32 19.25 34.17 21.01L34.17 21.01L34.20 21.03L34.19 21.03Q34.13 21.79 33.95 22.60L33.95 22.60Q33.80 23.30 33.57 24.02L33.57 24.02L33.59 24.04L33.69 24.14L30.27 27.99L30.30 28.03L30.25 27.97L33.62 31.99L33.50 31.87Q33.67 32.50 33.78 33.34L33.78 33.34Q33.88 34.15 33.92 35.14L33.92 35.14L33.87 35.09L33.82 35.05L29.38 39.97L29.46 40.05L29.47 40.06ZM28.69 42.66L28.61 42.58L28.67 42.65L28.58 42.56Q28.99 42.65 30.09 42.71L30.09 42.71Q30.93 42.76 32.17 42.79L32.17 42.79L32.06 42.69L31.99 42.62L31.98 42.61L35.40 42.07L35.47 42.14Q36.06 41.72 36.33 41.12L36.33 41.12Q36.63 40.43 36.53 39.50L36.53 39.50L36.42 39.39L36.45 39.43Q36.41 38.89 36.33 38.29L36.33 38.29Q36.22 37.39 36.04 36.35L36.04 36.35L35.99 36.31L36.03 36.34Q35.63 34.08 34.95 32.53L34.95 32.53Q34.26 30.95 33.28 30.13L33.28 30.13L33.30 30.15L33.10 29.76L33.19 29.83L33.21 29.82L33.10 29.72L35.67 23.95L35.63 23.91L35.58 23.86Q35.64 23.65 35.69 23.28L35.69 23.28Q35.74 22.96 35.80 22.52L35.80 22.52L35.71 22.43L35.73 22.45L35.83 22.55L35.90 21.18L35.72 21.00L34.32 18.68L34.28 18.71L34.32 18.76L34.32 18.76L32.87 17.23L32.84 17.20L26.18 16.22L26.06 16.09L26.10 16.13Q25.20 16.13 24.30 16.13L24.30 16.13Q23.60 16.13 22.90 16.13L22.90 16.13L22.93 16.16L22.89 16.12L22.90 16.13Q22.06 16.11 21.24 16.28L21.24 16.28Q20.48 16.43 19.75 16.75L19.75 16.75L19.82 16.81L19.78 16.78L19.86 16.86L18.64 19.37L18.62 19.35L18.49 19.22L18.85 22.24L18.85 22.25L18.75 22.14L20.84 22.98L20.71 22.85Q20.77 23.16 20.79 23.44L20.79 23.44Q20.82 23.75 20.80 24.00L20.80 24.00L20.80 24.00L20.79 23.99L20.79 24.00L20.74 24.93L20.69 24.88L20.82 25.02Q21.54 25.11 22.34 25.19L22.34 25.19Q23.34 25.28 24.47 25.35L24.47 25.35L24.49 25.38L24.54 25.42L24.66 25.54Q24.58 24.34 24.92 23.56L24.92 23.56Q25.17 22.99 25.63 22.63L25.63 22.63L25.66 22.65L25.65 22.65L25.58 22.58Q26.02 22.37 26.66 22.20L26.66 22.20Q27.47 21.99 28.59 21.86L28.59 21.86L28.55 21.82L28.59 21.86L28.47 21.74Q28.92 21.72 29.27 21.73L29.27 21.73Q29.79 21.76 30.12 21.87L30.12 21.87L30.27 22.01L30.20 21.94L30.16 22.06L30.21 22.20L30.20 22.29L30.46 23.00L30.38 22.92L30.40 23.33L30.29 23.22Q30.25 24.11 29.82 24.85L29.82 24.85Q29.42 25.54 28.69 26.10L28.69 26.10L28.77 26.19L28.75 26.17Q28.13 26.64 27.15 26.90L27.15 26.90Q26.50 27.07 25.69 27.14L25.69 27.14L25.83 27.28L25.92 27.37L25.88 27.33L24.12 27.32L24.16 27.36L24.10 27.31L24.46 28.50L24.42 28.46L24.41 28.45Q25.16 28.38 25.87 28.50L25.87 28.50Q26.69 28.64 27.46 29.02L27.46 29.02L27.51 29.08L27.48 29.16L25.87 29.30L25.83 29.27L26.08 30.31L26.03 30.26Q27.37 30.29 28.52 30.77L28.52 30.77Q29.30 31.10 30.00 31.64L30.00 31.64L29.98 31.62L30.02 31.66L29.94 31.59L30.49 33.62L30.41 33.53L30.39 33.52Q30.48 35.05 29.70 35.89L29.70 35.89Q29.01 36.64 27.62 36.84L27.62 36.84L27.75 36.97L27.62 36.84L25.02 37.14L25.01 37.12Q24.80 37.06 24.58 37.01L24.58 37.01Q24.29 36.95 23.99 36.90L23.99 36.90L24.07 36.98L24.04 36.50L24.17 36.34L24.26 36.14L24.24 35.92L24.25 35.72L24.13 35.43L24.16 35.28L24.20 35.33L24.29 35.41L22.40 35.54L22.53 35.67L22.55 35.69L22.54 35.30L22.41 35.17Q22.41 35.08 22.42 34.98L22.42 34.98Q22.42 34.86 22.42 34.72L22.42 34.72L22.42 34.72L22.45 34.75Q22.47 34.54 22.52 34.26L22.52 34.26Q22.57 33.98 22.65 33.62L22.65 33.62L22.71 33.68L22.60 33.57L18.93 34.20L18.95 34.23Q18.94 34.45 18.91 34.81L18.91 34.81Q18.88 35.22 18.82 35.82L18.82 35.82L18.74 35.75L18.83 35.84Q18.79 36.33 18.77 36.72L18.77 36.72Q18.74 37.25 18.74 37.59L18.74 37.59L18.73 37.58L18.62 37.47L20.25 40.47L20.34 40.56L20.23 40.45L26.41 42.52L26.38 42.49L26.46 42.57Q26.76 42.52 27.25 42.53L27.25 42.53Q27.82 42.54 28.64 42.62L28.64 42.62"/><path fill="#6adcdc" d="M83.23 19.45L83.23 19.45L83.07 19.29L84.10 27.14L84.09 27.12Q84.79 27.24 85.44 27.28L85.44 27.28Q85.92 27.32 86.38 27.32L86.38 27.32L86.26 27.20L87.45 27.29L88.50 27.23L88.61 27.34Q89.06 27.26 89.50 26.86L89.50 26.86Q89.94 26.46 90.38 25.76L90.38 25.76L90.45 25.83L90.39 25.77L90.37 25.75L91.33 23.51L91.28 23.46L91.18 23.37L87.41 19.94L87.43 19.96ZM84.20 29.98L84.15 29.93L84.08 29.86L84.16 29.94Q84.20 32.75 84.00 35.19L84.00 35.19Q83.75 38.26 83.11 40.73L83.11 40.73L83.06 40.67L82.97 40.59L79.18 42.04L79.13 42.00Q80.34 38.82 80.91 35.46L80.91 35.46Q81.50 31.93 81.36 28.20L81.36 28.20L81.19 28.03L81.36 28.20L78.19 14.29L78.17 14.27Q80.62 15.90 83.83 16.56L83.83 16.56Q86.00 17.00 88.51 17.00L88.51 17.00L88.57 17.07L88.57 17.06L88.64 17.13L94.87 20.62L94.89 20.64Q94.91 21.75 94.70 22.92L94.70 22.92Q94.47 24.27 93.94 25.70L93.94 25.70L93.95 25.71L93.85 25.61L92.55 28.00L92.48 27.94L92.60 28.06Q92.03 28.69 91.26 29.11L91.26 29.11Q90.16 29.71 88.66 29.86L88.66 29.86L88.73 29.94L88.76 29.97ZM90.35 32.24L90.25 32.14L90.26 32.15L95.65 27.56L95.75 27.67L96.55 21.99L96.59 22.03L96.56 22.00L95.54 19.34L95.63 19.44L94.80 18.87L94.73 18.81L94.72 18.80Q94.81 18.81 94.73 18.66L94.73 18.66Q94.63 18.48 94.30 18.07L94.30 18.07L94.21 17.98L94.29 18.06L94.19 17.96L88.65 16.61L88.65 16.60L88.74 16.70L77.48 13.39L77.56 13.48L77.56 13.47Q78.91 16.45 79.74 19.47L79.74 19.47Q80.92 23.74 81.07 28.10L81.07 28.10L81.06 28.09L81.05 28.08L81.00 28.03L78.59 42.75L78.59 42.75Q79.10 42.53 79.58 42.33L79.58 42.33Q80.21 42.07 80.77 41.85L80.77 41.85L80.59 41.67L80.43 42.26L80.39 42.99L80.32 42.92Q80.12 43.17 79.94 43.48L79.94 43.48Q79.82 43.69 79.71 43.91L79.71 43.91L79.75 43.95L79.86 44.06L85.13 42.44L85.11 42.42L85.18 42.49Q85.62 39.56 85.84 36.86L85.84 36.86Q86.04 34.45 86.08 32.23L86.08 32.23L86.10 32.25L86.20 32.35L86.16 32.31L88.18 32.17L88.17 32.16Q88.69 32.11 89.14 32.09L89.14 32.09Q89.74 32.07 90.20 32.09L90.20 32.09ZM89.39 22.30L89.28 22.19L89.25 22.15L89.33 22.23Q89.55 22.23 89.88 22.27L89.88 22.27Q90.27 22.33 90.80 22.45L90.80 22.45L90.88 22.53L90.89 22.54Q90.91 22.62 90.93 22.73L90.93 22.73Q90.94 22.84 90.96 22.99L90.96 22.99L91.00 23.04L91.08 23.11Q91.03 23.18 90.99 23.27L90.99 23.27Q90.95 23.37 90.91 23.51L90.91 23.51L90.96 23.56L91.05 23.66L91.03 23.63L90.01 25.55L90.10 25.63L90.12 25.65L88.57 26.96L88.55 26.94Q88.21 26.91 87.73 26.89L87.73 26.89Q87.07 26.87 86.12 26.87L86.12 26.87L86.21 26.96L86.15 26.90Q86.14 25.55 86.05 24.16L86.05 24.16Q85.99 23.22 85.90 22.27L85.90 22.27L85.90 22.27L86.82 22.35L87.63 22.33L87.68 22.37"/><path d="M15 20 C69 6,94 22,146 4" stroke="#37e6ba" fill="none"/><path fill="#df4d4d" d="M118.35 39.78L118.49 39.92L118.46 39.89L114.38 39.92L114.37 39.91L114.45 39.99Q114.87 37.15 115.05 34.40L115.05 34.40Q115.21 32.18 115.21 30.01L115.21 30.01L115.03 29.84L114.95 29.75L115.03 29.83Q115.18 27.15 115.03 24.28L115.03 24.28Q114.93 22.18 114.65 19.98L114.65 19.98L114.44 19.76L114.46 19.79Q111.91 19.58 109.78 18.96L109.78 18.96Q108.11 18.47 106.70 17.74L106.70 17.74L106.68 17.72L105.89 15.90L106.02 16.03Q105.87 15.73 105.65 15.29L105.65 15.29Q105.41 14.82 105.10 14.19L105.10 14.19L105.13 14.22L105.18 14.27L116.22 17.09L116.30 17.17L116.29 17.16Q119.33 17.17 122.28 16.60L122.28 16.60Q124.90 16.09 127.46 15.12L127.46 15.12L127.65 15.31L127.61 15.27L126.13 18.39L126.19 18.45L126.21 18.48L118.26 19.90L118.33 19.96L118.37 20.00Q118.21 22.51 118.14 25.02L118.14 25.02Q118.06 27.43 118.06 29.86L118.06 29.86L118.08 29.88L118.09 29.88L118.19 29.99ZM128.19 14.48L128.25 14.54L128.16 14.45L128.26 14.55L116.21 16.63L116.31 16.72Q113.53 16.60 111.02 16.03L111.02 16.03Q107.45 15.22 104.45 13.47L104.45 13.47L104.54 13.56L104.46 13.48L106.46 17.99L106.42 17.95Q106.75 18.13 107.17 18.34L107.17 18.34Q107.72 18.62 108.44 18.94L108.44 18.94L108.35 18.85L108.44 18.94L109.05 21.19L108.99 21.13L114.42 22.29L114.44 22.32L114.82 29.78L114.67 29.62L114.63 29.59L113.99 40.48L114.02 40.51L114.02 40.51Q114.92 40.42 115.49 40.38L115.49 40.38Q115.94 40.35 116.18 40.35L116.18 40.35L116.14 40.31L116.10 40.27L116.19 40.36L116.11 41.31L116.06 41.26L116.10 42.37L116.03 42.29Q116.56 42.27 117.15 42.27L117.15 42.27Q117.90 42.28 118.76 42.32L118.76 42.32L118.65 42.21L118.79 42.35L121.46 42.47L121.52 42.53Q120.80 39.98 120.41 37.42L120.41 37.42Q120.01 34.82 119.95 32.20L119.95 32.20L120.20 32.45L120.11 32.37L120.61 22.24L120.42 22.05L127.68 20.45L127.55 20.32Q127.93 19.20 128.37 18.15L128.37 18.15Q128.84 17.02 129.37 15.96L129.37 15.96L129.32 15.92L129.27 15.86L129.33 15.93L127.25 16.97L127.19 16.91L127.13 16.85"/><path d="M16 33 C94 16,67 40,133 28" stroke="#8fe48f" fill="none"/><path fill="#a5e169" d="M59.18 39.81L59.29 39.92L59.34 39.97L59.24 39.87L55.31 40.05L55.28 40.02L55.33 40.07L55.94 29.95L55.92 29.92L55.98 29.98Q56.00 27.60 55.86 25.13L55.86 25.13Q55.71 22.56 55.38 19.90L55.38 19.90L55.36 19.88L55.43 19.96L55.37 19.89Q52.62 19.57 50.39 18.87L50.39 18.87Q48.77 18.36 47.42 17.66L47.42 17.66L47.49 17.72L46.82 16.03L46.82 16.03Q46.72 15.75 46.48 15.25L46.48 15.25Q46.29 14.86 46.02 14.32L46.02 14.32L45.94 14.23L45.96 14.26L46.02 14.31Q48.50 15.62 51.20 16.33L51.20 16.33Q54.03 17.07 57.10 17.17L57.10 17.17L57.02 17.10L57.10 17.17Q60.44 17.23 63.66 16.57L63.66 16.57Q66.04 16.09 68.35 15.21L68.35 15.21L68.28 15.14L68.28 15.14L66.94 18.41L66.97 18.43L59.11 19.94L59.21 20.04Q59.08 22.07 59.01 24.11L59.01 24.11Q58.90 27.00 58.90 29.90L58.90 29.90L59.00 30.00L58.93 29.93Q58.96 32.28 59.04 34.64L59.04 34.64Q59.14 37.28 59.30 39.92L59.30 39.92ZM68.95 14.44L69.11 14.60L69.11 14.60L68.96 14.45L57.02 16.63L56.99 16.60L57.01 16.62L45.33 13.54L45.31 13.53L45.32 13.54L47.26 17.99L47.29 18.02L47.34 18.07L49.18 18.88L49.19 18.90L49.16 18.86L49.80 21.14L49.88 21.22L49.82 21.16L55.16 22.23L55.22 22.30L55.22 22.30L55.53 29.69L55.55 29.70L54.69 40.38L54.82 40.51L56.88 40.24L56.94 40.31Q56.85 40.37 56.79 40.56L56.79 40.56Q56.73 40.76 56.70 41.10L56.70 41.10L56.95 41.34L56.93 41.33L56.86 42.32L56.80 42.26Q57.45 42.22 58.21 42.22L58.21 42.22Q58.82 42.22 59.50 42.26L59.50 42.26L59.54 42.30L59.57 42.33Q59.97 42.24 60.72 42.25L60.72 42.25Q61.31 42.26 62.12 42.33L62.12 42.33L62.33 42.54L62.22 42.43Q61.58 39.63 61.27 36.70L61.27 36.70Q61.06 34.61 61.01 32.46L61.01 32.46L60.92 32.37L60.84 32.30L60.91 32.36Q60.84 29.59 60.96 26.92L60.96 26.92Q61.06 24.49 61.32 22.15L61.32 22.15L61.32 22.15L61.23 22.07Q63.19 21.81 64.94 21.38L64.94 21.38Q66.75 20.94 68.36 20.32L68.36 20.32L68.49 20.45L68.43 20.39L68.53 20.49Q68.77 19.40 69.09 18.41L69.09 18.41Q69.52 17.08 70.11 15.91L70.11 15.91L70.08 15.87L70.23 16.02L70.22 16.01L68.07 16.98L68.09 17.01"/><path d="M20 46 C85 2,68 41,149 22" stroke="#dc65a0" fill="none"/></svg>'"
 
 
-    except:
-        send_to_telegram(
-            "Свободные места на визу Франция https://consulat.gouv.fr/ambassade-de-france-a-minsk/rendez-vous?name=R"
-            "%C3%A9ception%20des%20demandes "
-            "%20de%20visa")
-        driver.save_screenshot(f'WARNING!!!!!1.png')
-        image()
 
-    driver.quit()
-
-
-while True:
-    checker()
+    while True:
+        # checker()
+        time.sleep(20)
